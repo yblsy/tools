@@ -75,16 +75,4 @@ public class DESUtils {
 
     }
 
-
-    public static void main(String[] args) {
-        String name = "root";
-        String password = "L&Wbrcjs1993";
-        String encryname = getEncryptString(name);
-        String encrypassword = getEncryptString(password);
-        System.out.println(encryname);
-        System.out.println(encrypassword);
-
-        System.out.println(getDecryptString(encryname));
-        System.out.println(getDecryptString(encrypassword));
-    }
 }

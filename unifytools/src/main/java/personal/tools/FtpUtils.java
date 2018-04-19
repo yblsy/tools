@@ -19,8 +19,8 @@ import java.util.stream.Stream;
  * @create 2018-04-18 14:29
  * To change this template use File | Settings | Editor | File and Code Templates.
  **/
-//@Setter
-//@Slf4j
+@Setter
+@Slf4j
 public class FtpUtils {
 
     public FtpUtils(String ftpHost,String ftpUserName,String ftpPassword,int ftpPort){
