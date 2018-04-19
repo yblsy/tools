@@ -4,7 +4,9 @@ import com.aliyun.oss.OSSClient;
 import com.aliyun.oss.model.*;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -65,13 +67,27 @@ public class OSSUtils {
         return bucket;
     }
 
+
+    /**
+     * multipartFile形式的
+     *
+     * @param key
+     * @param multipartFile
+     * @return
+     * @throws IOException
+     */
+    public String ossSimpleUpload4MultiPartFile(String key, MultipartFile multipartFile) throws IOException{
+        InputStream inputStream = multipartFile.getInputStream();
+        return ossSimpleUpload(key,inputStream);
+    }
+
     /**
      * OSS简单上传
      * @param inputStream
      * @return
      */
-    public String ossSimpleOssUpload(String key,InputStream inputStream){
-        return ossSimpleOssUpload(this.bucketName,key,inputStream);
+    public String ossSimpleUpload(String key,InputStream inputStream){
+        return ossSimpleUpload(this.bucketName,key,inputStream);
     }
 
     /**
@@ -81,8 +97,8 @@ public class OSSUtils {
      * @param inputStream
      * @return
      */
-    public String ossSimpleOssUpload(String bucketName,String key,InputStream inputStream){
-        return ossSimpleOssUpload(bucketName,key,inputStream,null);
+    public String ossSimpleUpload(String bucketName,String key,InputStream inputStream){
+        return ossSimpleUpload(bucketName,key,inputStream,null);
     }
 
     /**
@@ -94,7 +110,7 @@ public class OSSUtils {
      * @param objectMetadata
      * @return
      */
-    public String ossSimpleOssUpload(String bucketName,String key,InputStream inputStream,ObjectMetadata objectMetadata){
+    public String ossSimpleUpload(String bucketName,String key,InputStream inputStream,ObjectMetadata objectMetadata){
         this.getInstance();
         if(objectMetadata == null){
             ossClient.putObject(bucketName,key,inputStream);
