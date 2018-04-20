@@ -6,8 +6,9 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author 刘晨
@@ -37,14 +38,14 @@ public class OSSUtils {
     /**
      * 实例化OSS客户端
      */
-    private void getInstance(){
+    public void getInstance(){
         this.ossClient = new OSSClient(this.endPoint,this.accessKeyId,this.accessKeySecret);
     }
 
     /**
      * OSS客户端关闭
      */
-    private void close(){
+    public void close(){
         ossClient.shutdown();
     }
 
@@ -111,6 +112,7 @@ public class OSSUtils {
      * @return
      */
     public String ossSimpleUpload(String bucketName,String key,InputStream inputStream,ObjectMetadata objectMetadata){
+        bucketName = bucketName != null?bucketName:this.bucketName;
         this.getInstance();
         if(objectMetadata == null){
             ossClient.putObject(bucketName,key,inputStream);
@@ -119,5 +121,142 @@ public class OSSUtils {
         }
         this.close();
         return "http://" + bucketName + "." +this.endPoint +"/" + key;
+    }
+
+    /**
+     * 创建模拟文件夹
+     *
+     * @param bucketName
+     * @param dicName
+     * @return
+     */
+    public String ossCreateDic(String bucketName,String dicName){
+        bucketName = bucketName != null?bucketName:this.bucketName;
+        this.getInstance();
+        ossClient.putObject(bucketName, dicName, new ByteArrayInputStream(new byte[0]));
+        this.close();
+        return "http://" + bucketName + "." +this.endPoint +"/" + dicName;
+    }
+
+    /**
+     * 追加上传，适合不停的追加上传的文件
+     * 该方法需要自己去调用getInstance，和close方法
+     *
+     * @param bucketName
+     * @param key
+     * @param inputStream 要追加的内容
+     * @param appendObjectResult 追加的对象结果
+     * @return
+     */
+    public AppendObjectResult ossAppendObjUpload(String bucketName,String key,InputStream inputStream,AppendObjectResult appendObjectResult){
+        bucketName = bucketName != null?bucketName:this.bucketName;
+        long position = 0L;
+        if(appendObjectResult != null){
+            position = appendObjectResult.getNextPosition();
+        }
+        //需要追加的对象
+        AppendObjectRequest appendObjectRequest = new AppendObjectRequest(bucketName,key, inputStream);
+        appendObjectRequest.setPosition(position);
+        return ossClient.appendObject(appendObjectRequest);
+    }
+
+    /**
+     * 分片上传
+     *
+     * 需要支持断点上传
+     * 超过100M文件
+     *
+     * @return
+     */
+    public InitiateMultipartUploadResult ossBigFileInstance(String bucketName,String key){
+        bucketName = bucketName != null?bucketName:this.bucketName;
+        //初始化一个上传请求
+        InitiateMultipartUploadRequest initiateMultipartUploadRequest = new InitiateMultipartUploadRequest(bucketName,key);
+        //获得OSS服务器的上传回应
+        InitiateMultipartUploadResult initiateMultipartUploadResult = ossClient.initiateMultipartUpload(initiateMultipartUploadRequest);
+        return initiateMultipartUploadResult;
+    }
+
+    /**
+     * 分片上传的
+     *
+     * @param bucketName
+     * @param key
+     * @param initiateMultipartUploadResult
+     * @param uploadId
+     * @param inputStream
+     * @param partNumber
+     * @return
+     */
+    public PartETag ossBigFileUploadPartETag(String bucketName,String key,InitiateMultipartUploadResult initiateMultipartUploadResult,String uploadId,InputStream inputStream,int partNumber){
+        bucketName = bucketName != null?bucketName:this.bucketName;
+        uploadId = uploadId == null ? initiateMultipartUploadResult.getUploadId():uploadId;
+
+        UploadPartRequest uploadPartRequest = new UploadPartRequest();
+        uploadPartRequest.setBucketName(bucketName);
+        uploadPartRequest.setKey(key);
+        uploadPartRequest.setUploadId(uploadId);
+        uploadPartRequest.setInputStream(inputStream);
+        // 设置分片大小，除最后一个分片外，其它分片要大于100KB
+        uploadPartRequest.setPartSize(100 * 1024);
+        // 设置分片号，范围是1~10000，
+        uploadPartRequest.setPartNumber(partNumber);
+
+        UploadPartResult uploadPartResult = ossClient.uploadPart(uploadPartRequest);
+        return uploadPartResult.getPartETag();
+    }
+
+    /**
+     *
+     * OSS分片上传的完成，一定要调用
+     *
+     * @param bucketName
+     * @param key
+     * @param initiateMultipartUploadResult
+     * @param uploadId
+     * @param partETags
+     * @return
+     */
+    public CompleteMultipartUploadResult ossBigFileUploadComplete(String bucketName,String key,InitiateMultipartUploadResult initiateMultipartUploadResult,String uploadId,List<PartETag> partETags){
+        bucketName = bucketName != null?bucketName:this.bucketName;
+        uploadId = uploadId == null ? initiateMultipartUploadResult.getUploadId():uploadId;
+
+        partETags = partETags.stream().sorted((p1,p2) -> p1.getPartNumber() - p2.getPartNumber()).collect(Collectors.toList());
+
+        CompleteMultipartUploadRequest completeMultipartUploadRequest = new CompleteMultipartUploadRequest(bucketName, key, uploadId, partETags);
+        return ossClient.completeMultipartUpload(completeMultipartUploadRequest);
+    }
+
+    /**
+     * oss 取消分片上传
+     *
+     * @param bucketName
+     * @param key
+     * @param initiateMultipartUploadResult
+     * @param uploadId
+     */
+    public void ossBigFileUploadAbort(String bucketName,String key,InitiateMultipartUploadResult initiateMultipartUploadResult,String uploadId){
+        bucketName = bucketName != null?bucketName:this.bucketName;
+        uploadId = uploadId == null ? initiateMultipartUploadResult.getUploadId():uploadId;
+
+        AbortMultipartUploadRequest abortMultipartUploadRequest = new AbortMultipartUploadRequest(bucketName, key, uploadId);
+        ossClient.abortMultipartUpload(abortMultipartUploadRequest);
+    }
+
+    /**
+     * 流式下载
+     *
+     * 需要手动关闭，同时一定需要手动将OssObject手动关闭
+     *
+     * @param bucketName
+     * @param key
+     * @return
+     */
+    public OSSObject ossDownloadFile4Stream(String bucketName,String key){
+        this.getInstance();
+        bucketName = bucketName != null?bucketName:this.bucketName;
+
+        OSSObject ossObject = ossClient.getObject(bucketName,key);
+        return ossObject;
     }
 }
