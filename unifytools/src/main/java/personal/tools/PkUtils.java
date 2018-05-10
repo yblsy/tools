@@ -18,8 +18,8 @@ public class PkUtils {
      * 生成随机6位数
      * @return
      */
-    private static String randomNum(){
-        return "" + (int)((Math.random()*9+1) * 100000);
+    public static String randomNum(double length){
+        return "" + (int)((Math.random()*9+1) * ((int)Math.pow(10,length)));
     }
 
     /**
@@ -27,7 +27,7 @@ public class PkUtils {
      * @return
      */
     public static String pk4BaseUsers(){
-        return sdf.format(new Date()) + randomNum();
+        return sdf.format(new Date()) + randomNum(5);
     }
 
 }
