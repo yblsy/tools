@@ -196,4 +196,40 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils{
         String s=new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
         return s;
     }
+
+    public static boolean isCurrentDate(java.util.Date date, String patten) {
+        return formatDate(new java.util.Date(), patten).compareTo(formatDate(date, patten)) == 0;
+    }
+
+    public static String getBetweenTime(java.util.Date beforeTime, java.util.Date afterTime) {
+        long ms = afterTime.getTime() - beforeTime.getTime();
+        long ss = 1000L;
+        long mi = ss * 60L;
+        long hh = mi * 60L;
+        long dd = hh * 24L;
+        String result = "";
+        if(ms % dd > 0L && ms > 0L) {
+            result = result + (ms - ms % dd) / dd + "天";
+            ms %= dd;
+        }
+
+        if(ms % hh > 0L && ms > 0L) {
+            result = result + (ms - ms % hh) / hh + "时";
+            ms %= hh;
+        }
+
+        if(ms % mi > 0L && ms > 0L) {
+            result = result + (ms - ms % mi) / mi + "分";
+            ms %= mi;
+        }
+
+        if(ms % ss > 0L && ms > 0L) {
+            result = result + (ms - ms % ss) / ss + "秒";
+            long var10000 = ms % ss;
+        }
+
+        return result;
+    }
+
+
 }
