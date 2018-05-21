@@ -13,6 +13,8 @@ public enum InterviewErrorEnum {
     INTER_BC_ER_000001("BC_ERROR_000001","没有查询到相应的父节点"),
     INTER_BC_ER_000002("BC_ERROR_000002","更新父节点失败"),
     INTER_BC_ER_000003("BC_ERROR_000003","新增节点失败"),
+    INTER_BC_ER_000004("BC_ERROR_000004","节点名称不可以为空"),
+    INTER_BC_ER_000005("BC_ERROR_000005","删除节点失败"),
     ;
 
     private String code;
