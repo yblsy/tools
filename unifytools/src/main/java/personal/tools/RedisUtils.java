@@ -5,6 +5,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -34,6 +35,18 @@ public class RedisUtils {
      */
     public void setRedis(String key,Object value){
         redisTemplate.opsForValue().set(key,value);
+        this.setDefaultExpire(key);
+    }
+
+    public void setRedisForVersion(String key,Map<String,Object> value){
+        //更新redis里面的值，判断是否有version，如果有则+1,，没有则设置一个新值
+        if(value.containsKey("version")){
+            value.put("version", "" + (Integer.parseInt(value.get("version").toString()) + 1));
+        }else{
+            value.put("version","0");
+        }
+        value.put("time","" + System.currentTimeMillis());
+        redisTemplate.opsForHash().putAll(key,value);
         this.setDefaultExpire(key);
     }
 
@@ -91,9 +104,17 @@ public class RedisUtils {
         return redisTemplate.opsForList().range(key,0L,size);
     }
 
+    public Map getRedisMap(String key){
+        return redisTemplate.opsForHash().entries(key);
+    }
+
     public List getRedisList7Reset(String key){
         List result =  this.getRedisList(key);
         this.setDefaultExpire(key);
         return result;
+    }
+
+    public boolean hasKey(String key){
+        return redisTemplate.hasKey(key);
     }
 }
