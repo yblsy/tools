@@ -15,6 +15,7 @@ public enum InterviewErrorEnum {
     INTER_BC_ER_000003("BC_ERROR_000003","新增节点失败"),
     INTER_BC_ER_000004("BC_ERROR_000004","节点名称不可以为空"),
     INTER_BC_ER_000005("BC_ERROR_000005","删除节点失败"),
+    INTER_BC_ER_000006("BC_ERROR_000006","更新节点失败"),
     ;
 
     private String code;
