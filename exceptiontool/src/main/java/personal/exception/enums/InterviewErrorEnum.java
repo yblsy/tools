@@ -21,10 +21,12 @@ public enum InterviewErrorEnum {
     //BaseResources
     INTER_BR_ER_000001("INTER_BR_ER_000001","新增资源失败"),
     INTER_BR_ER_000002("INTER_BR_ER_000002","更新资源失败"),
-    INTER_BR_ER_000003("INTER_BR_ER_000003","更新资源失败"),
+    INTER_BR_ER_000003("INTER_BR_ER_000003","删除资源失败"),
     INTER_BR_ER_000004("INTER_BR_ER_000004","资源名称不可为空"),
     INTER_BR_ER_000005("INTER_BR_ER_000005","至少填写一个关键词"),
     INTER_BR_ER_000006("INTER_BR_ER_000006","资源Url不可为空"),
+    INTER_BR_ER_000007("INTER_BR_ER_000007","资源Id不可为空"),
+    INTER_BR_ER_000008("INTER_BR_ER_000008","查询不到资源"),
     ;
 
     private String code;
